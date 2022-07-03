@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/url"
 	"path"
@@ -32,8 +33,10 @@ func GenRSSString(dir string, baseURLStr string, channelTitle string, pubDateTim
 		return "", err
 	}
 
+	musicFiles := getMusicFiles(files)
+
 	podcastItems := []PodcastRSSItem{}
-	for _, file := range files {
+	for _, file := range musicFiles {
 		podcastItem, err := newPodcastRSSItem(file.Name(), baseURLStr, pubDateTimeStr)
 		if err != nil {
 			return "", err
@@ -137,4 +140,16 @@ func newPodcastRSSItem(filename string, baseURLStr string, pubDateTimeStr string
 	}
 
 	return ret, nil
+}
+
+func getMusicFiles(files []fs.FileInfo) []fs.FileInfo {
+	musicFiles := []fs.FileInfo{}
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".aac") ||
+			strings.HasSuffix(file.Name(), ".m4a") ||
+			strings.HasSuffix(file.Name(), ".mp3") {
+			musicFiles = append(musicFiles, file)
+		}
+	}
+	return musicFiles
 }
